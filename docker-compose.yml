@@ -1,0 +1,43 @@
+services:
+  resourcespace:
+    build: .
+    container_name: resourcespace
+    restart: unless-stopped
+    depends_on:
+      - mariadb
+    volumes:
+      - "/mnt/tank/nominet/Nominet - Media Downloaded:/var/www/html/filestore"
+      - ./config.php:/var/www/html/include/config.php
+    networks:
+      - default
+      - coolify
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.resourcespace.rule=Host(`resourcespace.thornton.com`)"
+      - "traefik.http.routers.resourcespace.entrypoints=http"
+      - "traefik.http.services.resourcespace.loadbalancer.server.port=80"
+      - "traefik.http.routers.resourcespace-secure.rule=Host(`resourcespace.thornton.com`)"
+      - "traefik.http.routers.resourcespace-secure.entrypoints=https"
+      - "traefik.http.routers.resourcespace-secure.tls=true"
+      - "traefik.http.routers.resourcespace-secure.tls.certresolver=letsencrypt"
+
+  mariadb:
+    image: mariadb
+    container_name: mariadb
+    restart: unless-stopped
+    env_file:
+      - db.env
+    volumes:
+      - mariadb:/var/lib/mysql
+    networks:
+      - default
+
+networks:
+  default:
+    external: false
+  coolify:
+    external: true
+    name: coolify
+
+volumes:
+  mariadb:
